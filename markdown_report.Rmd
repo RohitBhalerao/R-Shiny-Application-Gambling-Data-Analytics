@@ -1,0 +1,199 @@
+
+---
+title: "Internet Sports Gambling Activity Analysis & Marketing Data Mart"
+author: "Rohit Bhalerao, Marie Reine, Alessio Rosato"
+date: "December 23, 2020"
+output:
+  pdf_document: default
+  word_document: default
+---
+
+
+```{r basetable, echo=FALSE}
+datamart <- read.csv("C:\\Users\\rbhalerao\\Desktop\\Open Source Programming\\Group assignment\\datamart.csv")
+
+```
+<font size="4">
+<br />
+
+
+### Project Description
+
+The data from the betting company BWin includes demographic data of customers, transaction behavior and wins, stakes and bets for different products (games). Based on this data, a datamart in created with on record per customer. This helps us analyze the behaviour of clients which allows the company to pitch marketing campaigns accordingly. Based on datamart, marketing etrics are calculated which are used to show insighs on the shiny application.
+
+
+### 1. Data Description  
+
+**The following data was provided by BWin:**
+
+* **User Demographic** - Contains user data like Gender, Country, Language, Application used and the first date of activity for various activity types. 
+
+* **UserDailyAggregation** - Contains the bets, stakes and amount winnings for each user for each product type.
+
+* **PokerChipConversions** - Contains the transaction of amount sold or bought for each user.
+
+* **Analytic Dataset** - Contains actual user behaviour data including the first and last activity dates for different types of products.
+
+
+
+### 2. Data Manipulation and Creating Datamart
+
+For the datamart, the following changes were made to the original data :
+
+* The dates which were originally characters were changes to date values. 
+
+* The pokerchip data was summarized to only have the first and last date or transaction.
+
+* New columns are created for each type of product in the pokerchip data.
+
+* In user aggregation data, we place all negative values by 0
+
+* A wider pivot table is created from User Aggregation table with column for each varuable.
+
+* We merge the pivot tables that are created in the dataframe.
+
+* We replace all NULL and NA values by 0, and also remove columns with many 0's. One row with no Gender value is dropped.
+
+* In the marged data, replace all intergers with the actual value. The values are in the data documentation. Some columns are dropped because they are not required or are redundant.
+
+#### The final datamart has the following variables:
+```{r datamart, echo=FALSE}
+colnames(datamart)
+```
+
+
+### 3. Basic Data Analysis
+
+* 40499 Users in the datamart
+
+* Higher proportion of Males compared to Females
+
+* Betandwin.Com has highest number of users
+
+* Denmark, France and Germany have highest number of poker players
+
+
+
+#### Gender
+
+<br /> 92% of gamblers are men.
+<br />
+<br />
+
+
+```{r gender ratio, echo=FALSE, warning = FALSE, out.width = '380px', out.height = '380px'}
+library(ggplot2)
+temp = datamart[!is.na(datamart$Gender),]
+temp$Gender = ifelse(temp$Gender == "Male","Male","Female")
+ggplot(temp,aes(x=Gender)) +
+  geom_bar(aes(y=..count..))
+```
+
+
+
+#### Language
+<br />Most gamblers are German speakers. 
+<br />
+<br />
+
+
+```{r language ratio, echo=FALSE, out.width = '380px', out.height = '380px'}
+options(repos=structure(c(CRAN="https://cran.cnr.berkeley.edu/")))
+library(ggplot2)
+
+ggplot(datamart, aes(x = Language, y = UserID)) + geom_bar(stat="identity") + 
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) + labs(y = "Number", x= "Language") 
+```
+
+
+
+
+#### Betting Applications
+<br />Betandwin.Com is the most common application.
+<br />
+<br />
+
+```{r BettingApplication ratio, echo=FALSE, message=FALSE, warning =FALSE, out.width = '440px', out.height = '350px'}
+
+library(ggplot2)
+library(dplyr)
+
+pokerdata <- datamart[datamart[,9]>0 & datamart[,10]>0 ,c(1,2,10,11,12,13,43)]
+
+colnames(pokerdata) <- c("UserID", "Gender", "BettingApplication", "NbrTransSell", "AmountBuy", "AmountSell", "Country")
+
+applicationpoker = pokerdata %>% group_by(BettingApplication) %>% 
+                                 summarize(count = n(), AmountTotal = sum(AmountBuy) + sum(AmountSell)) %>%
+                                 arrange(desc(count)) %>% top_n(5)
+
+
+ggplot(applicationpoker, aes(x = BettingApplication, y = AmountTotal)) +
+  geom_bar(fill = "#0073C2FF", stat = "identity")
+```
+
+
+#### Countries
+
+<br />Most of the poker players are from Germany.
+<br />
+<br />
+
+
+```{r Country ratio, echo=FALSE, message=FALSE, out.width = '380px', out.height = '380px'}
+
+countrypoker = pokerdata %>% group_by(Country) %>% summarize(count = n(), AmountTotal = sum(AmountBuy) + sum(AmountSell)) %>%
+               arrange(desc(count)) %>% top_n(10)
+
+
+
+ggplot(countrypoker, aes(x = Country, y = count)) +
+  geom_bar(fill = "#0073C2FF", stat = "identity") +
+  geom_text(aes(label = count), angle = 90, hjust = 0)
+```
+
+
+![Total bets/users/amounts for each Country](1.jpeg)
+
+![Total bets/users/amounts for each Betting Application](2.jpeg)
+
+
+![A world map of all countries to which the clients belong](3.jpeg)
+
+![Total bets/stakes/winnings for Fixed Odds and Live Action product types.](4.jpeg)
+
+
+
+As it can be observed the German speaking users have accumulated the most amount of bets during the period of the data provided. 
+
+
+
+
+### 4. Shiny Application
+
+* A more detailed interactive analytics dashboard is available on the Shiny Application which has the following tabs: 
+
+* A comparison of the different betting applications
+
+* A comparison of the countries
+
+* A world map comparing the countries
+
+* Comparing the Fixed Odds and Live Actions for each country
+
+
+
+
+
+
+
+### 5. Conclusion :
+
+* We have cleaned the data from BWin to create a detailed datamart describing the behaviour, demographics and stakes, winnings and bets for different products for each user with one row per user.
+
+* We have created a dashboard to visualize the trends easily which and interactively allowing us to have a deeper insight of data and provide marketing analysis of the BWin users/.
+
+* This Shiny dashboard is deployed on cloud and available publicly.
+
+
+
+

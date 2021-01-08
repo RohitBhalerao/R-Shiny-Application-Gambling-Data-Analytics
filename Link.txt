@@ -1,0 +1,3 @@
+Please find enclosed the link to our shiny app:
+
+https://group7-bat-opensource-online-gambling-group-assignment.shinyapps.io/shinyapps/
